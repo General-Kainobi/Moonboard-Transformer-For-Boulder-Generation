@@ -1,0 +1,6 @@
+__pycache__/
+*.pth
+Old_Checkpoints/
+generated problems/
+*.png
+.DS_Store
