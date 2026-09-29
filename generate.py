@@ -30,7 +30,6 @@ def generate_problems(num_problems=5, temperature=1.0, grade='<7A>'):
 
     model.eval()
     
-    all_holds = []
     for i in range(num_problems):
         tokens = []
         if grade in VOCAB:
@@ -78,9 +77,8 @@ def generate_problems(num_problems=5, temperature=1.0, grade='<7A>'):
         from config import GRADES
         holds = [INV_VOCAB[t] for t in tokens if t not in [START_TOKEN, PAD_TOKEN, END_TOKEN] and INV_VOCAB.get(t, '') not in GRADES]
         print(f"Problem {i+1} ({grade}): {' -> '.join(holds)}")
-        all_holds.append(holds)
-        
-    return all_holds
+        print(holds, "\n")
+        print(tokens, "\n")
 
 
 """ Draw a moonboard problem on the layout"""
@@ -125,20 +123,13 @@ def plotAProblem(stringList, title = None, key = None):
     # Show the image
     if title:
         plt.title(title)
-        plt.savefig(key + '.jpg', dpi = 200)
-    # plt.show()
-    plt.close(fig) # close figure to prevent memory leak
+        # plt.savefig(key + '.jpg', dpi = 200)
+    plt.show()
+    # plt.savefig("generated_problem %i.jpg" %title)
+
+
 
 if __name__ == '__main__':
-    os.makedirs('generated problems', exist_ok=True)
     
-    grades_to_generate = ['<6B+>', '<7A>', '<6A+>']
-    for grade in grades_to_generate:
-        print(f"\nGenerating {grade} problems...")
-        problems = generate_problems(num_problems=3, temperature=1.2, grade=grade)
-        
-        clean_grade = grade.strip("<>")
-        for i, holds in enumerate(problems):
-            title = f"Problem {i+1} ({clean_grade})"
-            key = f"generated problems/{clean_grade}_{i+1}"
-            plotAProblem(holds, title=title, key=key)
+    print("\nGenerating Extrapolated 8B+ problems...")
+    generate_problems(num_problems=5, temperature=1.0, grade='<7A>')

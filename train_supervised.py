@@ -34,16 +34,17 @@ def train():
         
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-3)
     
-    # ReduceLROnPlateau scheduler helps settle into better generalized minima
+    # ReduceLROnPlateau scheduler helps settle into better generalized minimo
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
     
     # CrossEntropyLoss without label smoothing to enforce strict physical constraints
+    # label smoothing ho provato ma giustamente fare sampling da un uniforme su dati sequenziali non funziona e "rompe" l'encoding
     criterion = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     
-    # 3. Training Loop (Teacher Forcing)
+    # 3. Training Loop con Teacher Forcing (ground truth obbligato da passo precedente al corrente)
     best_val_loss = float('inf')
     
-    # Early stopping parameters, maybe switching to 3?
+    # Early stopping parameters, maybe switching to 3?( ferma training se passano x epoche senza differenza sostanziale nella loss)
     patience = 5
     epochs_without_improvement = 0
     

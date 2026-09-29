@@ -25,7 +25,8 @@ class MoonBoardTransformer(nn.Module):
     """
     Causal Transformer (Decoder-Only) for MoonBoard sequence generation.
     Combines discrete token embeddings with continuous (dx, dy) spatial embeddings.
-    """ #dx,dy differenze between the x,y of a single move
+    """ 
+#dx,dy differenze between the x,y of a single move
     def __init__(self):
         super().__init__()
         
@@ -37,7 +38,7 @@ class MoonBoardTransformer(nn.Module):
         # Continuous embedding for (dx, dy)
         self.spatial_projection = nn.Linear(2, self.d_model)
         
-        # We combine them, so maybe project the sum or concat?
+        # We combine them, so maybe project sum or concat?
         # A simple sum of token embedding + spatial embedding + positional encoding is standard.
         self.pos_encoder = PositionalEncoding(self.d_model, MAX_SEQ_LEN)
         
@@ -80,7 +81,6 @@ class MoonBoardTransformer(nn.Module):
         x = self.pos_encoder(x)
         x = x.transpose(0, 1) # [batch_size, seq_len, d_model]
         
-        # Causal mask
         causal_mask = self.generate_square_subsequent_mask(seq_len, tokens.device)
         
         # If we pass src_key_padding_mask to PyTorch Transformer, False = keep, True = mask out

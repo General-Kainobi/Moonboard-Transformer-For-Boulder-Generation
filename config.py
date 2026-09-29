@@ -9,7 +9,7 @@ EMBEDDING_DIM = 256
 NUM_LAYERS = 4
 NUM_HEADS = 8
 DROPOUT = 0.3
-MAX_SEQ_LEN = 25  # A typical bouldering problem is rarely longer than this
+MAX_SEQ_LEN = 25  # A typical bouldering problem is never longer than this, forse mettere 15 anche gia vaben?
 MAX_SPAN_UNITS = 7.0
 
 # Training hyperparameters

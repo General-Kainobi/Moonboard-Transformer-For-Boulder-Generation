@@ -17,10 +17,7 @@ def apply_csp_mask(logits: torch.Tensor, current_token_id: int, previous_tokens:
     """
     masked_logits = logits.clone()
     
-    # 1. No Repetition: Set logit of all previously used tokens (or just the immediately previous) to -inf.
-    # The prompt says: "Nessuna ripetizione: Imposta il logit dell'appiglio immediatamente precedente a -infinito."
-    # But generally for a bouldering problem you don't repeat any hold. Let's strictly follow the prompt 
-    # and mask the immediate previous, plus maybe all previous for safety if that's standard, but let's stick to prompt.
+    # No Repetition: Set logit of the immediately previous to -inf.
     if current_token_id not in [PAD_TOKEN, START_TOKEN]:
         masked_logits[current_token_id] = float('-inf')
     
@@ -28,12 +25,12 @@ def apply_csp_mask(logits: torch.Tensor, current_token_id: int, previous_tokens:
         if pt not in [PAD_TOKEN, START_TOKEN]:
             masked_logits[pt] = float('-inf')
             
-    # Also mask PAD and START tokens, they shouldn't be generated in the middle of a sequence.
+    # Also mask PAD and start tokens, they shouldn't be generated in the middle of a sequence.
     masked_logits[PAD_TOKEN] = float('-inf')
     masked_logits[START_TOKEN] = float('-inf')
     
-    # 2. Maximum Anatomical Span
-    # Calculate Euclidean distance for every token in vocabulary.
+    #Maximum Anatomical Span
+    # Euclidean distance for every token in vocabulary.
     if current_token_id not in [PAD_TOKEN, START_TOKEN]:
         cx, cy = token_to_coords(current_token_id)
         
