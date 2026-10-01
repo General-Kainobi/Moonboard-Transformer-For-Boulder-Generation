@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import math
-from config import VOCAB_SIZE, EMBEDDING_DIM, NUM_LAYERS, NUM_HEADS, DROPOUT, MAX_SEQ_LEN
+from config import VOCAB_SIZE as _DEFAULT_VOCAB_SIZE, EMBEDDING_DIM, NUM_LAYERS, NUM_HEADS, DROPOUT, MAX_SEQ_LEN
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model: int, max_len: int = 5000):
@@ -27,13 +27,14 @@ class MoonBoardTransformer(nn.Module):
     Combines discrete token embeddings with continuous (dx, dy) spatial embeddings.
     """ 
 #dx,dy differenze between the x,y of a single move
-    def __init__(self):
+    def __init__(self, vocab_size: int = _DEFAULT_VOCAB_SIZE):
         super().__init__()
         
+        self.vocab_size = vocab_size
         self.d_model = EMBEDDING_DIM
         
         # Token embedding (for discrete holds)
-        self.token_embedding = nn.Embedding(VOCAB_SIZE, self.d_model)
+        self.token_embedding = nn.Embedding(self.vocab_size, self.d_model)
         
         # Continuous embedding for (dx, dy)
         self.spatial_projection = nn.Linear(2, self.d_model)
@@ -52,7 +53,7 @@ class MoonBoardTransformer(nn.Module):
         self.transformer = nn.TransformerEncoder(decoder_layer, num_layers=NUM_LAYERS)
         
         # Output head to predict next token
-        self.fc_out = nn.Linear(self.d_model, VOCAB_SIZE)
+        self.fc_out = nn.Linear(self.d_model, self.vocab_size)
         
     def generate_square_subsequent_mask(self, sz: int, device: torch.device) -> torch.Tensor:
         """Generates a causal mask to prevent looking ahead in the sequence."""

@@ -4,16 +4,25 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 import os
 
-from config import DEVICE, BATCH_SIZE, LEARNING_RATE, NUM_EPOCHS, PAD_TOKEN, VOCAB_SIZE
+from config import DEVICE, BATCH_SIZE, LEARNING_RATE, NUM_EPOCHS, PAD_TOKEN, VOCAB
 from dataset import MoonBoardDataset, collate_fn
 from transformer_model import MoonBoardTransformer
+from patch2 import inject_wrong_problems
 
 def train():
     print(f"Using device: {DEVICE}")
     
     # 1. Dataset & DataLoader
     dataset = MoonBoardDataset('problems MoonBoard Masters 2019 40.json')
-    
+
+    # Inject ~5% "wrong" problems (extends vocab with <WRONG> token)
+    dataset = inject_wrong_problems(dataset, fraction=0.05)
+
+    # Recompute VOCAB_SIZE after injection so the model is sized correctly.
+    # patch2.inject_wrong_problems mutates the global VOCAB dict in-place.
+    VOCAB_SIZE = len(VOCAB)
+    print(f"Effective VOCAB_SIZE after patch2 injection: {VOCAB_SIZE}")
+
     if len(dataset) == 0:
         print("Dataset is empty after filtering!")
         return
@@ -26,7 +35,7 @@ def train():
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
     
     # 2. Model Initialization
-    model = MoonBoardTransformer().to(DEVICE)
+    model = MoonBoardTransformer(vocab_size=VOCAB_SIZE).to(DEVICE)
     
     if os.path.exists('best_model.pth'):
         print("Found existing 'best_model.pth'. Resuming training from checkpoint!", flush=True)
@@ -78,7 +87,7 @@ def train():
             # logits: [batch, seq_len, vocab_size] 
             # targets: [batch, seq_len]
             # Flatten for CrossEntropy 
-            logits_flat = logits.reshape(-1, VOCAB_SIZE)
+            logits_flat = logits.reshape(-1, VOCAB_SIZE)  # uses local VOCAB_SIZE (post-injection)
             targets_flat = targets.reshape(-1)
             
             loss = criterion(logits_flat, targets_flat)
@@ -111,7 +120,7 @@ def train():
                 src_key_padding_mask = (inputs == PAD_TOKEN)
                 
                 logits = model(inputs, inputs_dx_dy, src_key_padding_mask=src_key_padding_mask)
-                loss = criterion(logits.reshape(-1, VOCAB_SIZE), targets.reshape(-1))
+                loss = criterion(logits.reshape(-1, VOCAB_SIZE), targets.reshape(-1))  # uses local VOCAB_SIZE
                 val_loss += loss.item()
                 
                 if epoch == NUM_EPOCHS:
